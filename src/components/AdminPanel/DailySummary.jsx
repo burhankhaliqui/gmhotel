@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useApp } from '../../context/AppContext'
 import { formatCurrency, formatDateTime, todayString } from '../../utils/formatters'
 import { STATUS_COLORS } from '../../utils/constants'
@@ -13,14 +13,14 @@ export default function DailySummary({ onBack }) {
 
   const currency = settings.currency || 'PKR'
 
-  const loadSummary = async () => {
+  const loadSummary = useCallback(async () => {
     setLoading(true)
     const result = await window.api.reports.getDailySummary(date)
     if (result.success) setData(result.data)
     setLoading(false)
-  }
+  }, [date])
 
-  useEffect(() => { loadSummary() }, [date])
+  useEffect(() => { loadSummary() }, [loadSummary])
 
   const handleSave = async () => {
     if (!data) return

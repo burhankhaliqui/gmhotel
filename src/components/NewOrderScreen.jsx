@@ -73,7 +73,6 @@ export default function NewOrderScreen({ editOrder, onClose }) {
   }
 
   const handleAddToCart = (item, quantity, price, itemNotes) => {
-    const cartKey = `${item.id}_${price}`
     const existing = cartItems.findIndex(c => c.id === item.id && c.price === price)
     if (existing >= 0) {
       const updated = [...cartItems]

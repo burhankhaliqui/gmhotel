@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useApp } from '../../context/AppContext'
 import { formatCurrency, todayString } from '../../utils/formatters'
 import Modal from '../shared/Modal'
@@ -19,12 +19,12 @@ export default function Expenses() {
 
   const currency = settings.currency || 'PKR'
 
-  const loadExpenses = async () => {
+  const loadExpenses = useCallback(async () => {
     const result = await window.api.expenses.getAll({ date })
     if (result.success) setExpenses(result.data)
-  }
+  }, [date])
 
-  useEffect(() => { loadExpenses() }, [date])
+  useEffect(() => { loadExpenses() }, [loadExpenses])
 
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0)
 
