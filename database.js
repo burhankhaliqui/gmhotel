@@ -26,7 +26,9 @@ function getDb() {
 }
 
 function initializeDatabase() {
-  const database = getDb()
+  try {
+    const database = getDb()
+    console.log('Initializing database at:', getDbPath())
 
   database.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -160,6 +162,11 @@ function initializeDatabase() {
   const adminUser = database.prepare("SELECT id FROM users WHERE username = 'admin'").get()
   if (!adminUser) {
     seedDefaultData(database)
+  }
+  console.log('Database initialization complete')
+  } catch (err) {
+    console.error('Database initialization error:', err)
+    throw err
   }
 }
 

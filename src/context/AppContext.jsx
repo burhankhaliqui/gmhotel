@@ -11,62 +11,122 @@ export function AppProvider({ children }) {
   const [settings, setSettings] = useState({})
   const [orders, setOrders] = useState([])
   const [todayStats, setTodayStats] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const loadCategories = useCallback(async () => {
-    const result = await window.api.categories.getAll()
-    if (result.success) setCategories(result.data)
+    try {
+      if (!window.api) { console.error('API not ready when loading categories'); return }
+      const result = await window.api.categories.getAll()
+      if (result && result.success) setCategories(result.data || [])
+    } catch (err) {
+      console.error('Failed to load categories:', err)
+      setCategories([])
+    }
   }, [])
 
   const loadItems = useCallback(async () => {
-    const result = await window.api.items.getAll()
-    if (result.success) setItems(result.data)
+    try {
+      if (!window.api) { console.error('API not ready when loading items'); return }
+      const result = await window.api.items.getAll()
+      if (result && result.success) setItems(result.data || [])
+    } catch (err) {
+      console.error('Failed to load items:', err)
+      setItems([])
+    }
   }, [])
 
   const loadTables = useCallback(async () => {
-    const result = await window.api.tables.getAll()
-    if (result.success) setTables(result.data)
+    try {
+      if (!window.api) { console.error('API not ready when loading tables'); return }
+      const result = await window.api.tables.getAll()
+      if (result && result.success) setTables(result.data || [])
+    } catch (err) {
+      console.error('Failed to load tables:', err)
+      setTables([])
+    }
   }, [])
 
   const loadWaiters = useCallback(async () => {
-    const result = await window.api.waiters.getAll()
-    if (result.success) setWaiters(result.data)
+    try {
+      if (!window.api) { console.error('API not ready when loading waiters'); return }
+      const result = await window.api.waiters.getAll()
+      if (result && result.success) setWaiters(result.data || [])
+    } catch (err) {
+      console.error('Failed to load waiters:', err)
+      setWaiters([])
+    }
   }, [])
 
   const loadDeliveryBoys = useCallback(async () => {
-    const result = await window.api.deliveryBoys.getAll()
-    if (result.success) setDeliveryBoys(result.data)
+    try {
+      if (!window.api) { console.error('API not ready when loading delivery boys'); return }
+      const result = await window.api.deliveryBoys.getAll()
+      if (result && result.success) setDeliveryBoys(result.data || [])
+    } catch (err) {
+      console.error('Failed to load delivery boys:', err)
+      setDeliveryBoys([])
+    }
   }, [])
 
   const loadSettings = useCallback(async () => {
-    const result = await window.api.settings.get()
-    if (result.success) setSettings(result.data)
+    try {
+      if (!window.api) { console.error('API not ready when loading settings'); return }
+      const result = await window.api.settings.get()
+      if (result && result.success) setSettings(result.data || {})
+    } catch (err) {
+      console.error('Failed to load settings:', err)
+      setSettings({})
+    }
   }, [])
 
   const loadOrders = useCallback(async (filters) => {
-    const result = await window.api.orders.getAll(filters)
-    if (result.success) setOrders(result.data)
-    return result
+    try {
+      if (!window.api) { console.error('API not ready when loading orders'); return { success: false } }
+      const result = await window.api.orders.getAll(filters)
+      if (result && result.success) setOrders(result.data || [])
+      return result
+    } catch (err) {
+      console.error('Failed to load orders:', err)
+      setOrders([])
+      return { success: false }
+    }
   }, [])
 
   const loadTodayStats = useCallback(async () => {
-    const result = await window.api.orders.getTodayStats()
-    if (result.success) setTodayStats(result.data)
+    try {
+      if (!window.api) { console.error('API not ready when loading today stats'); return }
+      const result = await window.api.orders.getTodayStats()
+      if (result && result.success) setTodayStats(result.data)
+    } catch (err) {
+      console.error('Failed to load today stats:', err)
+      setTodayStats(null)
+    }
   }, [])
 
   const loadAll = useCallback(async () => {
     setLoading(true)
-    await Promise.all([
-      loadCategories(),
-      loadItems(),
-      loadTables(),
-      loadWaiters(),
-      loadDeliveryBoys(),
-      loadSettings(),
-      loadOrders(),
-      loadTodayStats(),
-    ])
-    setLoading(false)
+    setError(null)
+    try {
+      if (!window.api) {
+        throw new Error('Electron API not available')
+      }
+      await Promise.all([
+        loadCategories(),
+        loadItems(),
+        loadTables(),
+        loadWaiters(),
+        loadDeliveryBoys(),
+        loadSettings(),
+        loadOrders(),
+        loadTodayStats(),
+      ])
+    } catch (err) {
+      console.error('Init error:', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }, [loadCategories, loadItems, loadTables, loadWaiters, loadDeliveryBoys, loadSettings, loadOrders, loadTodayStats])
 
   useEffect(() => {
@@ -75,7 +135,7 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
-      categories, items, tables, waiters, deliveryBoys, settings, orders, todayStats, loading,
+      categories, items, tables, waiters, deliveryBoys, settings, orders, todayStats, loading, error,
       loadCategories, loadItems, loadTables, loadWaiters, loadDeliveryBoys,
       loadSettings, loadOrders, loadTodayStats, loadAll,
       setSettings,
