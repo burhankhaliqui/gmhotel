@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron')
+const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron')
 const path = require('path')
 const fs = require('fs')
 
@@ -42,9 +42,18 @@ function createWindow() {
   })
 }
 
-app.whenReady().then(() => {
-  const db = require('./database')
-  db.initializeDatabase()
+app.whenReady().then(async () => {
+  try {
+    const db = require('./database')
+    // initializeDatabase is intentionally synchronous (uses better-sqlite3 sync API)
+    db.initializeDatabase()
+    console.log('Database initialized successfully')
+  } catch (error) {
+    console.error('Failed to initialize database:', error)
+    dialog.showErrorBox('Database Error', 'Failed to initialize database: ' + error.message)
+    app.quit()
+    return
+  }
   createWindow()
 
   app.on('activate', () => {
